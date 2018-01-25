@@ -4,7 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
+
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -82,6 +87,30 @@ func runPlot(args []string) int {
 		return 1
 	}
 	fmt.Printf("%d packets processed\n", packets)
+
+	values := make(plotter.Values, len(hist))
+	horizontalLabels := make([]string, len(hist))
+	for i, v := range hist {
+		values[i] = float64(v)
+		horizontalLabels[i] = string(i)
+	}
+	p1, err := plot.New()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		return 1
+	}
+	verticalBarChart, err := plotter.NewBarChart(values, .25*vg.Centimeter)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		return 1
+	}
+	p1.Add(verticalBarChart)
+	p1.NominalX(horizontalLabels...)
+	err = p1.Save(2000, 1000, args[1])
+	if err != nil {
+		log.Panic(err)
+	}
+
 	return 0
 }
 
